@@ -29,7 +29,13 @@ func (shard *Shard) Read(key string) (*Value, error) {
 	if !shard.failed {
 		return shard.store[key], nil
 	}
-	return shard.prev.store[key], nil
+	if !shard.prev.failed {
+		return shard.prev.store[key], nil
+	}
+	if !shard.next.failed {
+		return shard.next.store[key], nil
+	}
+	return nil, errors.New("all the shards with the key are in failed state")
 }
 
 func (shard *Shard) Write(key string, value *Value) error {
@@ -57,7 +63,7 @@ func (shard *Shard) Write(key string, value *Value) error {
 }
 
 func (shard *Shard) Print() {
-	for k, v :=range shard.store {
+	for k, v := range shard.store {
 		fmt.Printf("key: %s, value: %+v \n", k, v)
 	}
 }
